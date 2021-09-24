@@ -1,14 +1,13 @@
 import 'dart:developer';
-import 'dart:html';
+import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:audioplayers/web/audioplayers_web.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:radio_demo/model/radio.dart';
-import 'package:velocity_x/velocity_x.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,18 +17,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late List<MyRadio> _radios;
+  // List<MyRadio>? _radios;
 
   late MyRadio _selectedRadio;
-  late Color _selectedColor;
+  Color? _selectedColor;
   bool _isPlaying = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
-    _fetchRadios();
-    _audioPlayer.onPlayerStateChanged.listen((event) {
+    // _fetchRadios();
+    _audioPlayer.onPlayerStateChanged.listen((PlayerState event) {
       if (event == PlayerState.PLAYING) {
         _isPlaying = true;
       } else {
@@ -41,115 +40,165 @@ class _HomeScreenState extends State<HomeScreen> {
 
   _playMusic(String url) {
     _audioPlayer.play(url);
-    _selectedRadio =
-        _radios.firstWhere((MyRadio element) => element.url == url);
-    log(_selectedRadio.toMap().toString());
+    _isPlaying = true;
+    setState(() {});
+    // _selectedRadio =
+    // _radios!.firstWhere((MyRadio element) => element.url == url);
+    // log(_selectedRadio.toMap().toString());
   }
 
-  _fetchRadios() async {
-    final String _radioJson =
-        await rootBundle.loadString('assets/json/radio.json');
-    _radios = MyRadioList.fromJson(_radioJson).radios!;
-    log(_radios.toString());
-    setState(() {});
-  }
+  // _fetchRadios() async {
+  //   final String _radioJson =
+  //       await rootBundle.loadString('assets/json/radio.json');
+  //   _radios = MyRadioList.fromJson(_radioJson).radios!;
+  //   setState(() {});
+  // }
+
+  List<String> demo = [
+    'https://drive.google.com/file/d/1VULUgN8kke4oCd_e9BnXJndlKFm_UdlX/view?usp=sharing',
+    'https://drive.google.com/file/d/1VULUgN8kke4oCd_e9BnXJndlKFm_UdlX/view?usp=sharing',
+    'https://drive.google.com/file/d/1VULUgN8kke4oCd_e9BnXJndlKFm_UdlX/view?usp=sharing'
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(),
-      body: Stack(
-        children: [
-          VxAnimatedBox()
-              .size(context.screenWidth, context.screenHeight)
-              .withGradient(const LinearGradient(
-                colors: [Colors.green, Colors.teal],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ))
-              .make(),
-          AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0.0,
-            centerTitle: true,
-            title: "Radio".text.xl4.bold.make().shimmer(
-                primaryColor: Colors.teal,
-                secondaryColor: Colors.white,
-                duration: const Duration(seconds: 3)),
-          ).h(80).p16(),
-          VxSwiper.builder(
-              aspectRatio: 1.0,
-              enlargeCenterPage: true,
-              itemCount: _radios.length,
-              itemBuilder: (context, index) => VxBox(
-                          child: ZStack([
-                    Positioned(
-                      child: VxBox(
-                        child: _radios[index]
-                            .category!
-                            .text
-                            .uppercase
-                            .white
-                            .make()
-                            .p16(),
-                      )
-                          .height(55)
-                          .black
-                          .alignCenter
-                          .withRounded(value: 10)
-                          .make(),
-                      top: 0,
-                      right: 0,
-                    ),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: VStack(
-                        [
-                          _radios[index].name!.text.xl3.white.bold.make(),
-                          5.heightBox,
-                          _radios[index].tagline!.text.sm.white.semiBold.make()
-                        ],
-                        crossAlignment: CrossAxisAlignment.center,
+      body: AnimatedContainer(
+        duration: const Duration(seconds: 3),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              colors: [Colors.green, Colors.teal],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // fit: StackFit.expand,
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              centerTitle: true,
+              title: const Text("Radio"),
+              titleTextStyle:
+                  const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+              toolbarHeight: 58,
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: PageView.builder(
+                itemCount: demo.length,
+                controller: PageController(viewportFraction: 0.95),
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (BuildContext context, int index) => Center(
+                  child: InkWell(
+                    onTap: () {
+                      _playMusic(demo[index]);
+                    },
+                    child: Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      // color: Colors.blueGrey.withOpacity(0.3),
+                      borderOnForeground: false,
+                      child: Container(
+                        decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: NetworkImage(
+                                    'https://liveonlineradio.net/wp-content/uploads/2018/04/Gakku-FM-220x108.jpg'))),
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        width: MediaQuery.of(context).size.height * 0.35,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    gradient: LinearGradient(
+                                        colors: [
+                                          Colors.green.withOpacity(0.5),
+                                          Colors.blue.withOpacity(0.3),
+                                        ],
+                                        begin: Alignment.topRight,
+                                        end: Alignment.bottomLeft)),
+                                padding: const EdgeInsets.all(8.0),
+                                child: const Text(
+                                  "KZ",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.center,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    "Gakku",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 36),
+                                  ),
+                                  const Text("92.55",
+                                      style: TextStyle(
+                                          color: Colors.grey, fontSize: 24)),
+                                  CupertinoButton(
+                                      child: const Icon(
+                                        CupertinoIcons.play,
+                                        size: 45,
+                                      ),
+                                      onPressed: () {})
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Align(
-                        alignment: Alignment.center,
-                        child: [
-                          const Icon(
-                            CupertinoIcons.play,
-                            color: Colors.white,
-                          ),
-                          .10.heightBox,
-                          "Double tap to play".text.gray400.make(),
-                        ].vStack()),
-                  ]))
-                      .clip(Clip.antiAlias)
-                      .bgImage(
-                        DecorationImage(
-                            image: NetworkImage(_radios[index].image!),
-                            fit: BoxFit.cover,
-                            colorFilter: ColorFilter.mode(
-                                Colors.black.withOpacity(0.3),
-                                BlendMode.darken)),
-                      )
-                      .border(color: Colors.black, width: .5)
-                      .withRounded(value: 60)
-                      .make()
-                      .p16()
-                      .onInkDoubleTap(() {})
-                      .centered()),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Icon(
-              _isPlaying
-                  ? CupertinoIcons.stop_circle_fill
-                  : CupertinoIcons.stop_circle_fill,
-              color: Colors.white,
-              size: 50,
+                  ),
+                ),
+              ),
             ),
-          ).pOnly(bottom: context.percentHeight * 12)
-        ],
-        fit: StackFit.expand,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  "Now playing",
+                  style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  "Gakku",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                      color: Colors.teal.shade600,
+                      borderRadius: BorderRadius.circular(65)),
+                  margin: const EdgeInsets.symmetric(vertical: 50),
+                  child: CupertinoButton(
+                      alignment: Alignment.center,
+                      child: Icon(
+                        _isPlaying ? Icons.play_arrow : Icons.stop,
+                        size: 35,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPlaying = !_isPlaying;
+                        });
+                      }),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
